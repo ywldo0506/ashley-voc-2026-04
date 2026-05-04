@@ -324,14 +324,31 @@ function buildChart(week){
     },
     plugins:[{id:'lbl',afterDatasetsDraw:function(chart){
       var ctx=chart.ctx;
+      var lineEls = chart.getDatasetMeta(1).data;
       chart.getDatasetMeta(0).data.forEach(function(el,j){
-        var h=el.base-el.y;if(h<14)return;
-        ctx.save();ctx.font='bold 9px Arial';ctx.fillStyle='#A32D2D';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(pcts[j]+'%',el.x,el.y+h/2);ctx.restore();
+        var h = el.base - el.y;
+        var lineY = lineEls[j] ? lineEls[j].y : null;
+        ctx.save(); ctx.font='bold 9px Arial'; ctx.fillStyle='#A32D2D'; ctx.textAlign='center';
+        if (h < 14) {
+          // 막대 너무 작으면 위에
+          ctx.textBaseline='bottom';
+          ctx.fillText(pcts[j]+'%', el.x, el.y-3);
+        } else {
+          var midY = el.y + h/2;
+          // 꺾은선과 12px 이내로 겹치면 살짝 아래로
+          if (lineY !== null && Math.abs(lineY - midY) < 12) {
+            midY = Math.min(el.base - 7, midY + 10);
+          }
+          ctx.textBaseline='middle';
+          ctx.fillText(pcts[j]+'%', el.x, midY);
+        }
+        ctx.restore();
       });
       chart.getDatasetMeta(1).data.forEach(function(el,j){
-        ctx.save();ctx.font='bold 9px Arial';ctx.fillStyle='#0C447C';ctx.textAlign='center';ctx.textBaseline='bottom';
-        ctx.fillText(avgs[j].toFixed(2),el.x,el.y-8);ctx.restore();
+        ctx.save(); ctx.font='bold 9px Arial'; ctx.fillStyle='#0C447C';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(avgs[j].toFixed(2), el.x, el.y-8);
+        ctx.restore();
       });
     }}]
   });
